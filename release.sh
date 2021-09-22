@@ -1499,7 +1499,7 @@ copy_directory_tree() {
 							_cdt_filters+="|toc_filter version-retail ${_cdt_classic:+true}"
 							_cdt_filters+="|toc_filter version-classic $([[ -z "$_cdt_classic" || "$_cdt_classic" == "bcc" ]] && echo "true")"
 							_cdt_filters+="|toc_filter version-bcc $([[ -z "$_cdt_classic" || "$_cdt_classic" == "classic" ]] && echo "true")"
-							[[ -z "$_cdt_external" && ! $file =~ -(Mainline|Classic|BCC).toc$ ]] && _cdt_filters+="|toc_interface_filter"
+							[[ $file =~ -(Mainline|Classic|BCC).toc$ ]] && _cdt_filters+="|toc_interface_filter"
 							[ -n "$_cdt_localization" ] && _cdt_filters+="|localization_filter"
 							;;
 					esac
@@ -2160,7 +2160,7 @@ fi
 if [ -z "$skip_zipfile" ]; then
 	archive_version="$project_version"
 	archive_name="$( filename_filter "$file_name" ).zip"
-	archive_label="$archive_version"
+	archive_label="$( filename_filter "$file_name" )"
 	if [[ "${file_name}" == *"{game-type}"* ]] || [[ "$game_type" != "retail" && "${file_name}" == *"{classic}"* ]]; then
 		# append the game-type for clarity
 		archive_label="$archive_version-$game_type"
