@@ -1317,18 +1317,7 @@ lua_filter() {
 }
 
 toc_interface_filter() {
-	# Always remove BOM so ^ works
-	if [ "$root_toc_version" != "$toc_version" ]; then
-		# toc version isn't what is set in the toc file
-		if [ -n "$root_toc_version" ]; then # rewrite
-			sed -e $'1s/^\xEF\xBB\xBF//' -e 's/^## Interface:.*$/## Interface: '"$toc_version"'/' -e '/^## Interface-/d'
-		else # add
-			sed -e $'1s/^\xEF\xBB\xBF//' -e '1i\
-## Interface: '"$toc_version" -e '/^## Interface-/d'
-		fi
-	else # cleanup
-		sed -e $'1s/^\xEF\xBB\xBF//' -e '/^## Interface-/d'
-	fi
+	sed -e $'1s/^\xEF\xBB\xBF//' -e 's/^## Interface:.*$/## Interface: '"$toc_version"'/' -e '/^## Interface-/d'
 }
 
 xml_filter() {
