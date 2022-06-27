@@ -1186,7 +1186,7 @@ if [[ -z "$package" ]]; then
 	# shellcheck disable=SC2035
 	package=$( cd "$topdir" && find *.toc -maxdepth 0 2>/dev/null | sort -dr | head -n1 )
 	if [[ -z "$package" ]]; then
-		echo "Could not find an addon TOC file. In another directory? Set 'package-as' in .pkgmeta" >&2
+		echo "[1] Could not find an addon TOC file. In another directory? Set 'package-as' in .pkgmeta" >&2
 		exit 1
 	fi
 	package=${package%.toc}
@@ -1222,7 +1222,7 @@ for path in "${!toc_root_paths[@]}"; do
 done
 
 if [[ ${#toc_interfaces[@]} -eq 0 ]]; then
-	echo "Could not find an addon TOC file. In another directory? Make sure it matches the 'package-as' in .pkgmeta" >&2
+	echo "[2] Could not find an addon TOC file. In another directory? Make sure it matches the 'package-as' in .pkgmeta" >&2
 	exit 1
 fi
 
