@@ -1039,8 +1039,7 @@ do_toc() {
 	local toc_file toc_version toc_game_type root_toc_version
 	local toc_path="$1"
 	local package_name="$2"
-
-	[[ -z $package_name ]] && return 0
+	toc_path=${toc_path//\/\//\/} # Fix double slashes
 
 	local toc_name=${toc_path##*/}
 
@@ -1607,7 +1606,9 @@ copy_directory_tree() {
 			n)	_cdt_nolib="true" ;;
 			p)	_cdt_do_not_package="true" ;;
 			u)	_cdt_unchanged_patterns=$OPTARG ;;
-			g)	_cdt_gametype=$OPTARG ;;
+			g)	_cdt_gametype=$OPTARG
+					_cdt_gametype=${_cdt_gametype#"${_cdt_gametype%%[! ]*}"} # trim leading whitespace
+					;;
 			e)	_cdt_external="true" ;;
 			S)	_cdt_split="true" ;;
 		esac
@@ -1937,7 +1938,11 @@ checkout_external() {
 		fi
 		# If a .pkgmeta file is present, process it for "ignore" and "plain-copy" lists.
 		parse_ignore "$_cqe_checkout_dir/.pkgmeta" "$_external_dir"
-		copy_directory_tree -dnpe -i "$ignore" -u "$unchanged" "$_cqe_checkout_dir" "$pkgdir/$_external_dir"
+		cdt_args="-dnpe"
+		[ -n "$game_type" ] && cdt_args+=" -g $game_type"
+		[ -n "$ignore" ] && cdt_args+=" -i \"$ignore\""
+		[ -n "$unchanged" ] && cdt_args+=" -u \"$unchanged\""
+		copy_directory_tree "$cdt_args" "$_cqe_checkout_dir" "$pkgdir/$_external_dir"
 	)
 	# Remove the ".checkout" subdirectory containing the full checkout.
 	if [ -d "$_cqe_checkout_dir" ]; then
