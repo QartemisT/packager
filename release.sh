@@ -1054,6 +1054,8 @@ do_toc() {
 	local package_name="$2"
 	toc_path=${toc_path//\/\//\/} # Fix double slashes
 
+	[[ $toc_path == *"/Libs/"* ]] && return 0
+
 	local toc_name=${toc_path##*/}
 
 	toc_file=$(
