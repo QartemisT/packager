@@ -1606,9 +1606,7 @@ copy_directory_tree() {
 			n)	_cdt_nolib="true" ;;
 			p)	_cdt_do_not_package="true" ;;
 			u)	_cdt_unchanged_patterns=$OPTARG ;;
-			g)	_cdt_gametype=$OPTARG
-					_cdt_gametype=${_cdt_gametype#"${_cdt_gametype%%[! ]*}"} # trim leading whitespace
-					;;
+			g)	_cdt_gametype=$OPTARG ;;
 			e)	_cdt_external="true" ;;
 			S)	_cdt_split="true" ;;
 		esac
@@ -1928,7 +1926,7 @@ checkout_external() {
 		[ -n "$game_type" ] && cdt_args+=" -g $game_type"
 		[ -n "$ignore" ] && cdt_args+=" -i \"$ignore\""
 		[ -n "$unchanged" ] && cdt_args+=" -u \"$unchanged\""
-		copy_directory_tree "$cdt_args" "$_cqe_checkout_dir" "$pkgdir/$_external_dir"
+		eval copy_directory_tree "$cdt_args" "\"$_cqe_checkout_dir\"" "\"$pkgdir/$_external_dir\""
 	)
 	# Remove the ".checkout" subdirectory containing the full checkout.
 	if [ -d "$_cqe_checkout_dir" ]; then
