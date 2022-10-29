@@ -1113,15 +1113,6 @@ do_toc() {
 			root_toc_version="$toc_version"
 		fi
 
-		if [[ -z "$toc_version" ]]; then
-			if [[ -z "$toc_game_type" ]]; then
-				echo "$toc_name is missing an interface version." >&2
-			else
-				echo "$toc_name has an interface version that is not compatible with the game version \"$toc_game_type\" or was not found." >&2
-			fi
-			exit 1
-		fi
-
 		# Don't overwrite a specific version
 		if [[ -z "${si_game_type_interface_all[$toc_game_type]}" ]]; then
 			si_game_type_interface_all[$toc_game_type]="$toc_version"
