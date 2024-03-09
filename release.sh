@@ -1111,63 +1111,51 @@ do_toc() {
 
 	root_toc_version="$toc_version"
 
-	if [[ ${toc_name} =~ "$package_name"[-_](Mainline|Classic|Vanilla|BCC|TBC|Wrath|WOTLKC|Cata)\.toc$ ]]; then
-		# Flavored
-		if [[ -z "$toc_version" ]]; then
+
+	# Fallback
+	local game_type_toc_version
+	# Save the game type interface values
+	for type in "${!game_flavor[@]}"; do
+		game_type_toc_version=$( awk 'tolower($0) ~ /^## interface-'"$type"':/ { print $NF; exit }' <<< "$toc_file" )
+		if [[ -n "$game_type_toc_version" ]]; then
+			type="${game_flavor[$type]}"
+			si_game_type_interface[$type]="$game_type_toc_version"
+			si_game_type_interface_all[$type]="$game_type_toc_version"
+		fi
+	done
+	# Use the game type if set, otherwise default to retail
+	game_type_toc_version="${si_game_type_interface_all[${game_type:-retail}]}"
+
+	if [[ -z "$toc_version" ]] || [[ -n "$game_type" && -n "$game_type_toc_version" && "$game_type_toc_version" != "$toc_version" ]]; then
+		toc_version="$game_type_toc_version"
+		toc_to_type "$toc_version" "toc_game_type"
+	fi
+
+	# Check @non-@ blocks for other interface lines
+	if [[ -z "$toc_version" ]] || [[ -n "$game_type" && "$toc_game_type" != "$game_type" ]]; then
+		toc_game_type="$game_type"
+		case $toc_game_type in
+			classic) toc_version=$( sed -n '/@non-[-a-z]*@/,/@end-non-[-a-z]*@/{//b;p}' <<< "$toc_file" | awk '/#[[:blank:]]*## Interface:[[:blank:]]*(11)/ { print $NF; exit }' ) ;;
+			bcc) toc_version=$( sed -n '/@non-[-a-z]*@/,/@end-non-[-a-z]*@/{//b;p}' <<< "$toc_file" | awk '/#[[:blank:]]*## Interface:[[:blank:]]*(20)/ { print $NF; exit }' ) ;;
+			wrath) toc_version=$( sed -n '/@non-[-a-z]*@/,/@end-non-[-a-z]*@/{//b;p}' <<< "$toc_file" | awk '/#[[:blank:]]*## Interface:[[:blank:]]*(30)/ { print $NF; exit }' ) ;;
+			cata) toc_version=$( sed -n '/@non-[-a-z]*@/,/@end-non-[-a-z]*@/{//b;p}' <<< "$toc_file" | awk '/#[[:blank:]]*## Interface:[[:blank:]]*(40)/ { print $NF; exit }' ) ;;
+		esac
+		# This becomes the actual interface version after replacements
+		root_toc_version="$toc_version"
+	fi
+
+	if [[ -z "$toc_version" ]]; then
+		if [[ -z "$toc_game_type" ]]; then
 			echo "$toc_name is missing an interface version." >&2
-			exit 1
+		else
+			echo "$toc_name has an interface version that is not compatible with the game version \"$toc_game_type\" or was not found." >&2
 		fi
-		local toc_file_game_type="${game_flavor[${BASH_REMATCH[1],,}]}"
-		if [[ "$toc_file_game_type" != "$toc_game_type" ]]; then
-			echo "$toc_name has an interface version ($toc_version) that is not compatible with \"$toc_file_game_type\"." >&2
-			exit 1
-		fi
-	else
-		# Fallback
-		local game_type_toc_version
-		# Save the game type interface values
-		for type in "${!game_flavor[@]}"; do
-			game_type_toc_version=$( awk 'tolower($0) ~ /^## interface-'"$type"':/ { print $NF; exit }' <<< "$toc_file" )
-			if [[ -n "$game_type_toc_version" ]]; then
-				type="${game_flavor[$type]}"
-				si_game_type_interface[$type]="$game_type_toc_version"
-				si_game_type_interface_all[$type]="$game_type_toc_version"
-			fi
-		done
-		# Use the game type if set, otherwise default to retail
-		game_type_toc_version="${si_game_type_interface_all[${game_type:-retail}]}"
+		exit 1
+	fi
 
-		if [[ -z "$toc_version" ]] || [[ -n "$game_type" && -n "$game_type_toc_version" && "$game_type_toc_version" != "$toc_version" ]]; then
-			toc_version="$game_type_toc_version"
-			toc_to_type "$toc_version" "toc_game_type"
-		fi
-
-		# Check @non-@ blocks for other interface lines
-		if [[ -z "$toc_version" ]] || [[ -n "$game_type" && "$toc_game_type" != "$game_type" ]]; then
-			toc_game_type="$game_type"
-			case $toc_game_type in
-				classic) toc_version=$( sed -n '/@non-[-a-z]*@/,/@end-non-[-a-z]*@/{//b;p}' <<< "$toc_file" | awk '/#[[:blank:]]*## Interface:[[:blank:]]*(11)/ { print $NF; exit }' ) ;;
-				bcc) toc_version=$( sed -n '/@non-[-a-z]*@/,/@end-non-[-a-z]*@/{//b;p}' <<< "$toc_file" | awk '/#[[:blank:]]*## Interface:[[:blank:]]*(20)/ { print $NF; exit }' ) ;;
-				wrath) toc_version=$( sed -n '/@non-[-a-z]*@/,/@end-non-[-a-z]*@/{//b;p}' <<< "$toc_file" | awk '/#[[:blank:]]*## Interface:[[:blank:]]*(30)/ { print $NF; exit }' ) ;;
-				cata) toc_version=$( sed -n '/@non-[-a-z]*@/,/@end-non-[-a-z]*@/{//b;p}' <<< "$toc_file" | awk '/#[[:blank:]]*## Interface:[[:blank:]]*(40)/ { print $NF; exit }' ) ;;
-			esac
-			# This becomes the actual interface version after replacements
-			root_toc_version="$toc_version"
-		fi
-
-		if [[ -z "$toc_version" ]]; then
-			if [[ -z "$toc_game_type" ]]; then
-				echo "$toc_name is missing an interface version." >&2
-			else
-				echo "$toc_name has an interface version that is not compatible with the game version \"$toc_game_type\" or was not found." >&2
-			fi
-			exit 1
-		fi
-
-		# Don't overwrite a specific version
-		if [[ -z "${si_game_type_interface_all[$toc_game_type]}" ]]; then
-			si_game_type_interface_all[$toc_game_type]="$toc_version"
-		fi
+	# Don't overwrite a specific version
+	if [[ -z "${si_game_type_interface_all[$toc_game_type]}" ]]; then
+		si_game_type_interface_all[$toc_game_type]="$toc_version"
 	fi
 	toc_root_interface[$toc_path]="$root_toc_version"
 	toc_interfaces[$toc_path]=$( IFS=':' ; echo "${si_game_type_interface_all[*]}" )
