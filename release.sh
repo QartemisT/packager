@@ -1150,7 +1150,8 @@ do_toc() {
 		else
 			echo "$toc_name has an interface version that is not compatible with the game version \"$toc_game_type\" or was not found." >&2
 		fi
-		exit 1
+		#exit 1 -- Don't exit, safely ignore
+		return 0
 	fi
 
 	# Don't overwrite a specific version
